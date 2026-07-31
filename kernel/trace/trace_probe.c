@@ -433,6 +433,7 @@ parse_probe_arg(char *arg, const struct fetch_type *type,
 
 			code->op = FETCH_OP_FOFFS;
 			code->immediate = (unsigned long)offset;  // imm64?
+			offset = 0;
 		} else {
 			/* uprobes don't support symbols */
 			if (!(flags & TPARG_FL_KERNEL)) {
@@ -533,8 +534,6 @@ parse_probe_arg(char *arg, const struct fetch_type *type,
 	}
 	return ret;
 }
-
-#define BYTES_TO_BITS(nb)	((BITS_PER_LONG * (nb)) / sizeof(long))
 
 /* Bitfield type needs to be parsed into a fetch function */
 static int __parse_bitfield_probe_arg(const char *bf,
@@ -650,6 +649,12 @@ static int traceprobe_parse_probe_arg_body(const char *argv, ssize_t *size,
 	}
 	parg->offset = *size;
 	*size += parg->type->size * (parg->count ?: 1);
+
+	if (*size > MAX_PROBE_EVENT_SIZE) {
+		ret = -E2BIG;
+		trace_probe_log_err(offset, EVENT_TOO_BIG);
+		goto out;
+	}
 
 	ret = -ENOMEM;
 	if (parg->count) {
