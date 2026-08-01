@@ -6781,7 +6781,7 @@ static void l2cap_chan_le_send_credits(struct l2cap_chan *chan)
 {
 	struct l2cap_conn *conn = chan->conn;
 	struct l2cap_le_credits pkt;
-	u16 return_credits = l2cap_le_rx_credits(chan);
+	u16 return_credits = (chan->imtu / chan->mps) + 1;
 	int ident;
 
 	if (chan->mode != L2CAP_MODE_LE_FLOWCTL &&
